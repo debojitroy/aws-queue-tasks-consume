@@ -1,4 +1,5 @@
-# aws-queue-tasks-consume
+# AWS Queue Consume Tasks
+
 Sample App to demonstrate distributed, event driven producer/consumer model using AWS Services
 
 ## Logic
@@ -9,6 +10,7 @@ Sample App to demonstrate distributed, event driven producer/consumer model usin
    3. Dynamo table
    4. Number of entities to generate
    5. Max number of messages per combination
+   6. SQS Queue for Dynamo Streams
 2. Randomly generate Entity Ids
 3. Create a function which calls "entity_id" and tells how many rows
 4. Enter the values in DynamoDB (entity_id + number of records)
