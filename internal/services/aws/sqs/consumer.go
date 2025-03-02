@@ -1,4 +1,4 @@
-package sample
+package sqs
 
 import (
 	"context"
@@ -18,6 +18,7 @@ type Handler func(ctx context.Context, msg *types.Message) error
 
 type Config struct {
 	QueueURL        string
+	Region          string
 	NumWorkers      int
 	BatchSize       int32
 	WaitTimeSeconds int32
@@ -32,7 +33,8 @@ type Worker struct {
 
 func NewWorker(cfg *Config) (*Worker, error) {
 	// Load AWS configuration
-	awsCfg, err := config.LoadDefaultConfig(context.Background())
+	awsCfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(cfg.Region))
 	if err != nil {
 		return nil, fmt.Errorf("unable to load SDK config: %v", err)
 	}
@@ -55,7 +57,7 @@ func NewWorker(cfg *Config) (*Worker, error) {
 	}, nil
 }
 
-func (w *Worker) Start(ctx context.Context, handler Handler, wg *sync.WaitGroup) {
+func (w *Worker) start(ctx context.Context, handler Handler, wg *sync.WaitGroup) {
 	for i := 0; i < w.Config.NumWorkers; i++ {
 		wg.Add(1)
 		go w.consume(ctx, i, handler, wg)
@@ -99,20 +101,7 @@ func (w *Worker) consume(ctx context.Context, workerID int, handler Handler, wg 
 	}
 }
 
-func processMessage(_ context.Context, msg *types.Message) error {
-	// Implement your message processing logic here
-	log.Printf("Processing message: %s", *msg.Body)
-	return nil
-}
-
-func main() {
-	cfg := &Config{
-		QueueURL:        os.Getenv("SQS_QUEUE_URL"),
-		NumWorkers:      3,
-		BatchSize:       10,
-		WaitTimeSeconds: 20,
-	}
-
+func StartSqsConsumer(messageHandler Handler, cfg *Config) {
 	worker, err := NewWorker(cfg)
 	if err != nil {
 		log.Fatalf("Error creating worker: %v", err)
@@ -126,7 +115,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	// Start the workers
-	worker.Start(ctx, processMessage, &wg)
+	worker.start(ctx, messageHandler, &wg)
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
