@@ -13,6 +13,16 @@ import (
 // Color console
 // github.com/fatih/color
 
+type hello func(name string)
+
+func sayHello(name string) {
+	fmt.Printf("Hello %s \n", name)
+}
+
+func testHello(h hello) {
+	h("Debojit")
+}
+
 func main() {
 	_region := "us-west-2"
 	_ddb_table := "entity_messages"
@@ -69,4 +79,6 @@ func main() {
 	} else {
 		log.Println("Successfully published messages to SQS")
 	}
+
+	testHello(sayHello)
 }
