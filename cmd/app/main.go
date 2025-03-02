@@ -6,6 +6,7 @@ import (
 	"log"
 
 	dynamodb "github.com/debojitroy/aws-queue-tasks-consume/internal/services/aws/dynamodb"
+	sqs "github.com/debojitroy/aws-queue-tasks-consume/internal/services/aws/sqs"
 	entity "github.com/debojitroy/aws-queue-tasks-consume/internal/services/entity"
 )
 
@@ -15,6 +16,7 @@ import (
 func main() {
 	_region := "us-west-2"
 	_ddb_table := "entity_messages"
+	_entity_queue_url := "https://sqs.us-west-2.amazonaws.com/381491940830/EntityMessagesQueue"
 	_entity := entity.NewEntity(100)
 
 	fmt.Printf("EntityId: %s \n", _entity.GetId())
@@ -44,12 +46,27 @@ func main() {
 
 	log.Println("Successfully added item to DynamoDB")
 
-	log.Println("Decrementing count by 2")
-	decrement_err := ddb.DecrementMessageCount(context.TODO(), _entity.GetId(), 2)
+	// log.Println("Decrementing count by 2")
+	// decrement_err := ddb.DecrementMessageCount(context.TODO(), _entity.GetId(), 2)
 
-	if decrement_err != nil {
-		log.Fatalf("Failed to decrement item by 2 :: %v", err)
+	// if decrement_err != nil {
+	// 	log.Fatalf("Failed to decrement item by 2 :: %v", err)
+	// }
+
+	// log.Println("Successfully decremented count by 2")
+
+	log.Println("Publishing messages to SQS")
+
+	sqs, err := sqs.NewSQSClient(_region, _entity_queue_url)
+	if err != nil {
+		log.Fatalf("Failed to create SQS client: %v", err)
 	}
 
-	log.Println("Successfully decremented count by 2")
+	sqsError := sqs.SendEntityMessages(_entity)
+
+	if sqsError != nil {
+		log.Fatalf("Failed to publish messages to SQS: %v", err)
+	} else {
+		log.Println("Successfully published messages to SQS")
+	}
 }

@@ -20,13 +20,23 @@ func randSeq(r *rand.Rand, n int) string {
 type Entity struct {
 	id           string
 	messageCount int
+	messages     []string
 }
 
 func NewEntity(maxMessages int) *Entity {
 	r := rand.New(source)
+	entity_id := randSeq(r, 30)
+	messageCount := r.Intn(maxMessages)
+
+	var messages []string
+	for i := 0; i < messageCount; i++ {
+		messages = append(messages, fmt.Sprintf("Entity: %s | Message # %d", entity_id, i))
+	}
+
 	return &Entity{
-		id:           randSeq(r, 30),
-		messageCount: r.Intn(maxMessages),
+		id:           entity_id,
+		messageCount: messageCount,
+		messages:     messages,
 	}
 }
 
@@ -39,9 +49,5 @@ func (e *Entity) GetMessageCount() int {
 }
 
 func (e *Entity) GetMessages() []string {
-	var result []string
-	for i := 0; i < e.messageCount; i++ {
-		result = append(result, fmt.Sprintf("Entity: %s | Message # %d", e.id, i))
-	}
-	return result
+	return e.messages
 }
