@@ -14,9 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 )
 
-type Handler func(ctx context.Context, msg *types.Message) error
+type Handler func(ctx context.Context, msg *types.Message, region string, tableName string) error
 
 type Config struct {
+	TableName       string
 	QueueURL        string
 	Region          string
 	NumWorkers      int
@@ -44,9 +45,9 @@ func NewWorker(cfg *Config) (*Worker, error) {
 
 	// Configure receive message input
 	input := &sqs.ReceiveMessageInput{
-		QueueUrl:            &cfg.QueueURL,
-		MaxNumberOfMessages: cfg.BatchSize,
-		WaitTimeSeconds:     cfg.WaitTimeSeconds,
+		QueueUrl:              &cfg.QueueURL,
+		MaxNumberOfMessages:   cfg.BatchSize,
+		WaitTimeSeconds:       cfg.WaitTimeSeconds,
 		MessageAttributeNames: []string{"All"},
 	}
 
@@ -84,7 +85,7 @@ func (w *Worker) consume(ctx context.Context, workerID int, handler Handler, wg 
 
 			// Process messages
 			for _, message := range output.Messages {
-				if err := handler(ctx, &message); err != nil {
+				if err := handler(ctx, &message, w.Config.Region, w.Config.TableName); err != nil {
 					log.Printf("Error processing message: %v", err)
 					continue
 				}
@@ -133,5 +134,3 @@ func StartSqsConsumer(messageHandler Handler, cfg *Config) {
 	wg.Wait()
 	log.Println("Shutdown complete")
 }
-
-// https://stackoverflow.com/questions/40498371/how-to-send-an-interrupt-signal

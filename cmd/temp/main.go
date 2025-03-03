@@ -11,6 +11,7 @@ func main() {
 	println("Hello, World!")
 
 	cfg := &sqs.Config{
+		TableName:       "entity_messages",
 		QueueURL:        _entity_queue_url,
 		NumWorkers:      3,
 		BatchSize:       10,

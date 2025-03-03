@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var EntityTracker = make(map[string]struct{}, 0)
+var _entityTracker = make(map[string]struct{}, 0)
 
 var source = rand.NewSource(time.Now().UnixNano())
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -23,6 +23,18 @@ type Entity struct {
 	id           string
 	messageCount int
 	messages     []string
+}
+
+func AddEntity(entityId string) {
+	_entityTracker[entityId] = struct{}{}
+}
+
+func RemoveEntity(entityId string) {
+	delete(_entityTracker, entityId)
+}
+
+func GetEntityCount() int {
+	return len(_entityTracker)
 }
 
 func NewEntity(maxMessages int) *Entity {
