@@ -29,6 +29,8 @@ func main() {
 	_entity_queue_url := "https://sqs.us-west-2.amazonaws.com/381491940830/EntityMessagesQueue"
 	_entity := entity.NewEntity(100)
 
+	//TODO: Move entity production code to entity_producer
+
 	fmt.Printf("EntityId: %s \n", _entity.GetId())
 	fmt.Printf("Message Count: %d \n", _entity.GetMessageCount())
 

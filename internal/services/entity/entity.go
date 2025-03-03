@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+var EntityTracker = make(map[string]struct{}, 0)
+
 var source = rand.NewSource(time.Now().UnixNano())
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 

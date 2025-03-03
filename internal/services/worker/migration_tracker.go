@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
+	// entity "github.com/debojitroy/aws-queue-tasks-consume/internal/services/entity"
 )
 
 type DynamoDBRecord struct {
@@ -45,6 +46,8 @@ type DynamoDBRecord struct {
 
 func MigrationTrackerHandler(record types.Record) error {
 	log.Println("---------------------------")
+
+	// value,ok := entity.EntityTracker["value"]
 
 	dynamoRecord := new(DynamoDBRecord)
 	err := json.Unmarshal(record.Data, &dynamoRecord)
