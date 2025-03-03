@@ -1,5 +1,7 @@
 github.com/aws/aws-sdk-go-v2 v1.36.3 h1:mJoei2CxPutQVxaATCzDUjcZEjVRdpsiiXi2o38yqWM=
 github.com/aws/aws-sdk-go-v2 v1.36.3/go.mod h1:LLXuLpgzEbD766Z5ECcRmi8AzSwfZItDtmABVkRLGzg=
+github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 h1:zAybnyUQXIZ5mok5Jqwlf58/TFE7uvd3IAsa1aF9cXs=
+github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10/go.mod h1:qqvMj6gHLR/EXWZw4ZbqlPbQUyenf4h82UQUlKc+l14=
 github.com/aws/aws-sdk-go-v2/config v1.29.8 h1:RpwAfYcV2lr/yRc4lWhUM9JRPQqKgKWmou3LV7UfWP4=
 github.com/aws/aws-sdk-go-v2/config v1.29.8/go.mod h1:t+G7Fq1OcO8cXTPPXzxQSnj/5Xzdc9jAAD3Xrn9/Mgo=
 github.com/aws/aws-sdk-go-v2/credentials v1.17.61 h1:Hd/uX6Wo2iUW1JWII+rmyCD7MMhOe7ALwQXN6sKDd1o=
@@ -24,6 +26,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.15 h1:M1R
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.15/go.mod h1:uvFKBSq9yMPV4LGAi7N4awn4tLY+hKE35f8THes2mzQ=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.15 h1:dM9/92u2F1JbDaGooxTq18wmmFzbJRfXfVfy96/1CXM=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.15/go.mod h1:SwFBy2vjtA0vZbjjaFtfN045boopadnoVPhu4Fv66vY=
+github.com/aws/aws-sdk-go-v2/service/kinesis v1.33.0 h1:JPXkrQk5OS/+Q81fKH97Ll/Vmmy0p9vwHhxw+V+tVjg=
+github.com/aws/aws-sdk-go-v2/service/kinesis v1.33.0/go.mod h1:dJngkoVMrq0K7QvRkdRZYM4NUp6cdWa2GBdpm8zoY8U=
 github.com/aws/aws-sdk-go-v2/service/sqs v1.38.0 h1:8za7W7p6GaEbPNvNGuQty36qpQykCA+ONxh0LBp46qs=
 github.com/aws/aws-sdk-go-v2/service/sqs v1.38.0/go.mod h1:Bar4MrRxeqdn6XIh8JGfiXuFRmyrrsZNTJotxEJmWW0=
 github.com/aws/aws-sdk-go-v2/service/sso v1.25.0 h1:2U9sF8nKy7UgyEeLiZTRg6ShBS22z8UnYpV6aRFL0is=

@@ -47,6 +47,7 @@ func NewWorker(cfg *Config) (*Worker, error) {
 		QueueUrl:            &cfg.QueueURL,
 		MaxNumberOfMessages: cfg.BatchSize,
 		WaitTimeSeconds:     cfg.WaitTimeSeconds,
+		MessageAttributeNames: []string{"All"},
 	}
 
 	return &Worker{

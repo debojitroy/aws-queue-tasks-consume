@@ -81,4 +81,9 @@ func main() {
 	}
 
 	testHello(sayHello)
+
+	// Test Consumer
+	// implement worker entity function handler
+	// initialise the consumer
+	// print incoming messages
 }
