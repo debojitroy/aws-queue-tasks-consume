@@ -64,8 +64,8 @@ func MigrationTrackerHandler(record types.Record) error {
 	messageCount, err := strconv.Atoi(dynamoRecord.Dynamodb.NewImage.MessageCount.N)
 
 	if err != nil {
-		log.Fatalf("Error unmarshalling record: %v", err)
-		return err
+		log.Printf("Error unmarshalling record: %+v \n. Ignoring record", err)
+		return nil
 	}
 
 	// If no messages are left, migration is complete

@@ -5,6 +5,9 @@ import (
 	"log"
 	"sync"
 	"time"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -171,4 +174,23 @@ func (kc *KinesisConsumer) Stop() {
 	kc.cancel()
 	kc.wg.Wait()
 	log.Println("Consumer stopped")
+}
+
+func (consumer *KinesisConsumer) StartKinesisStreamProcessor(handler KinesisRecordHandler) {
+	// Handle graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Start consumer in a goroutine
+	go func() {
+		log.Printf("Starting to consume from stream: %s", consumer.streamName)
+		if err := consumer.Start(handler); err != nil {
+			log.Fatalf("Error starting consumer: %v", err)
+		}
+	}()
+
+	// Wait for shutdown signal
+	<-sigChan
+	log.Println("Shutting down...")
+	consumer.Stop()
 }

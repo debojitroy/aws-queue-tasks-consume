@@ -38,12 +38,15 @@ func GenerateRandomEntities(num int, config *EntityProducerConfig) error {
 
 	// Publish all entities to the queue
 	for _, record := range entities {
+		log.Printf("Processing Entity Id: %s \n", record.GetId())
 		// Put Item to DynamoDB
 		// Create a new DynamoDB client
 		entityMessageItem := &dynamodb.EntityMessages{
 			EntityId:     record.GetId(),
 			MessageCount: record.GetMessageCount(),
 		}
+
+		log.Printf("Publishing Message count for Entity Id: %s \n", record.GetId())
 
 		err = ddb.PutMessageCount(context.TODO(), *entityMessageItem)
 		if err != nil {
@@ -54,7 +57,7 @@ func GenerateRandomEntities(num int, config *EntityProducerConfig) error {
 		log.Println("Successfully added item to DynamoDB")
 
 		// Publish the messages to SQS
-		log.Println("Publishing messages to SQS")
+		log.Printf("Publishing messages to SQS for Entity Id: %s \n", record.GetId())
 
 		sqsError := sqs.SendEntityMessages(record)
 
@@ -66,6 +69,7 @@ func GenerateRandomEntities(num int, config *EntityProducerConfig) error {
 		}
 
 		// Add the entity to tracking
+		log.Printf("Adding entity to tracking for Entity Id: %s \n", record.GetId())
 		entity.AddEntity(record.GetId())
 	}
 

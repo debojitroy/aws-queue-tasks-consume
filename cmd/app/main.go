@@ -1,91 +1,69 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
+	"sync"
 
-	dynamodb "github.com/debojitroy/aws-queue-tasks-consume/internal/services/aws/dynamodb"
+	kinesis "github.com/debojitroy/aws-queue-tasks-consume/internal/services/aws/kinesis"
 	sqs "github.com/debojitroy/aws-queue-tasks-consume/internal/services/aws/sqs"
-	entity "github.com/debojitroy/aws-queue-tasks-consume/internal/services/entity"
+	worker "github.com/debojitroy/aws-queue-tasks-consume/internal/services/worker"
 )
 
 // Color console
 // github.com/fatih/color
 
-type hello func(name string)
-
-func sayHello(name string) {
-	fmt.Printf("Hello %s \n", name)
-}
-
-func testHello(h hello) {
-	h("Debojit")
-}
-
 func main() {
+	_entity_count := 2
 	_region := "us-west-2"
 	_ddb_table := "entity_messages"
 	_entity_queue_url := "https://sqs.us-west-2.amazonaws.com/381491940830/EntityMessagesQueue"
-	_entity := entity.NewEntity(100)
+	_kinesis_stream_name := "entity-messages-stream"
 
-	//TODO: Move entity production code to entity_producer
+	// Start Producer
+	log.Println("Starting Producer")
 
-	fmt.Printf("EntityId: %s \n", _entity.GetId())
-	fmt.Printf("Message Count: %d \n", _entity.GetMessageCount())
-
-	// for loop to iterate over the messages
-	for _, message := range _entity.GetMessages() {
-		fmt.Printf("Message:: %s \n", message)
+	entityProducerConfig := &worker.EntityProducerConfig{
+		Region:    _region,
+		QueueUrl:  _entity_queue_url,
+		TableName: _ddb_table,
 	}
 
-	// Put Item to DynamoDB
-	// Create a new DynamoDB client
-	ddb, err := dynamodb.NewDynamoDBClient(_region, _ddb_table)
+	worker.GenerateRandomEntities(_entity_count, entityProducerConfig)
+
+	log.Println("Completing Producer")
+
+	var wg sync.WaitGroup
+
+	// Start the Kinesis Stream Consumer
+	log.Println("Starting Kinesis Stream Consumer")
+	consumer, err := kinesis.NewKinesisConsumer(_kinesis_stream_name, _region)
 	if err != nil {
-		log.Fatalf("Failed to create DynamoDB client: %v", err)
+		log.Fatalf("Error creating consumer: %v", err)
 	}
 
-	entityMessageItem := &dynamodb.EntityMessages{
-		EntityId:     _entity.GetId(),
-		MessageCount: _entity.GetMessageCount(),
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		consumer.StartKinesisStreamProcessor(worker.MigrationTrackerHandler)
+	}()
+
+	log.Println("Starting SQS Consumer")
+
+	sqsConfig := &sqs.Config{
+		TableName:       _ddb_table,
+		QueueURL:        _entity_queue_url,
+		NumWorkers:      3,
+		BatchSize:       10,
+		WaitTimeSeconds: 20,
 	}
 
-	err = ddb.PutMessageCount(context.TODO(), *entityMessageItem)
-	if err != nil {
-		log.Fatalf("Failed to put item: %v", err)
-	}
+	wg.Add(1)
 
-	log.Println("Successfully added item to DynamoDB")
+	go func() {
+		defer wg.Done()
+		sqs.StartSqsConsumer(worker.EntityMessageConsumer, sqsConfig)
+	}()
 
-	// log.Println("Decrementing count by 2")
-	// decrement_err := ddb.DecrementMessageCount(context.TODO(), _entity.GetId(), 2)
-
-	// if decrement_err != nil {
-	// 	log.Fatalf("Failed to decrement item by 2 :: %v", err)
-	// }
-
-	// log.Println("Successfully decremented count by 2")
-
-	log.Println("Publishing messages to SQS")
-
-	sqs, err := sqs.NewSQSClient(_region, _entity_queue_url)
-	if err != nil {
-		log.Fatalf("Failed to create SQS client: %v", err)
-	}
-
-	sqsError := sqs.SendEntityMessages(_entity)
-
-	if sqsError != nil {
-		log.Fatalf("Failed to publish messages to SQS: %v", err)
-	} else {
-		log.Println("Successfully published messages to SQS")
-	}
-
-	testHello(sayHello)
-
-	// Test Consumer
-	// implement worker entity function handler
-	// initialise the consumer
-	// print incoming messages
+	wg.Wait()
 }
