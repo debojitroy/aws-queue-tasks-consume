@@ -7,6 +7,7 @@ import (
 	dynamodb "github.com/debojitroy/aws-queue-tasks-consume/internal/services/aws/dynamodb"
 	sqs "github.com/debojitroy/aws-queue-tasks-consume/internal/services/aws/sqs"
 	entity "github.com/debojitroy/aws-queue-tasks-consume/internal/services/entity"
+	color "github.com/fatih/color"
 )
 
 type EntityProducerConfig struct {
@@ -14,6 +15,8 @@ type EntityProducerConfig struct {
 	QueueUrl  string
 	TableName string
 }
+
+var c = color.New(color.FgHiBlue)
 
 func GenerateRandomEntities(num int, config *EntityProducerConfig) error {
 	var entities []*entity.Entity
@@ -38,7 +41,7 @@ func GenerateRandomEntities(num int, config *EntityProducerConfig) error {
 
 	// Publish all entities to the queue
 	for _, record := range entities {
-		log.Printf("Processing Entity Id: %s \n", record.GetId())
+		c.Printf("Processing Entity Id: %s \n", record.GetId())
 		// Put Item to DynamoDB
 		// Create a new DynamoDB client
 		entityMessageItem := &dynamodb.EntityMessages{
@@ -46,7 +49,7 @@ func GenerateRandomEntities(num int, config *EntityProducerConfig) error {
 			MessageCount: record.GetMessageCount(),
 		}
 
-		log.Printf("Publishing Message count for Entity Id: %s \n", record.GetId())
+		c.Printf("Publishing Message count for Entity Id: %s \n", record.GetId())
 
 		err = ddb.PutMessageCount(context.TODO(), *entityMessageItem)
 		if err != nil {
@@ -54,10 +57,10 @@ func GenerateRandomEntities(num int, config *EntityProducerConfig) error {
 			return err
 		}
 
-		log.Println("Successfully added item to DynamoDB")
+		c.Println("Successfully added item to DynamoDB")
 
 		// Publish the messages to SQS
-		log.Printf("Publishing messages to SQS for Entity Id: %s \n", record.GetId())
+		c.Printf("Publishing messages to SQS for Entity Id: %s \n", record.GetId())
 
 		sqsError := sqs.SendEntityMessages(record)
 
@@ -65,11 +68,11 @@ func GenerateRandomEntities(num int, config *EntityProducerConfig) error {
 			log.Fatalf("Failed to publish messages to SQS: %v", sqsError)
 			return sqsError
 		} else {
-			log.Println("Successfully published messages to SQS")
+			c.Println("Successfully published messages to SQS")
 		}
 
 		// Add the entity to tracking
-		log.Printf("Adding entity to tracking for Entity Id: %s \n", record.GetId())
+		c.Printf("Adding entity to tracking for Entity Id: %s \n", record.GetId())
 		entity.AddEntity(record.GetId())
 	}
 

@@ -8,7 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	entity "github.com/debojitroy/aws-queue-tasks-consume/internal/services/entity"
+	color "github.com/fatih/color"
 )
+
+var cTrack = color.New(color.FgHiCyan)
+var cTrackErr = color.New(color.FgRed).Add(color.Bold)
 
 type DynamoDBRecord struct {
 	AwsRegion    string `json:"awsRegion"`
@@ -47,9 +51,7 @@ type DynamoDBRecord struct {
 }
 
 func MigrationTrackerHandler(record types.Record) error {
-	log.Println("---------------------------")
-
-	// value,ok := entity.EntityTracker["value"]
+	cTrack.Println("---------------------------")
 
 	dynamoRecord := new(DynamoDBRecord)
 	err := json.Unmarshal(record.Data, &dynamoRecord)
@@ -58,30 +60,30 @@ func MigrationTrackerHandler(record types.Record) error {
 		log.Fatalf("Error unmarshalling record: %v", err)
 		return err
 	} else {
-		log.Printf("New Record: %+v", dynamoRecord.Dynamodb.NewImage)
+		cTrack.Printf("New Record: %+v", dynamoRecord.Dynamodb.NewImage)
 	}
 
 	messageCount, err := strconv.Atoi(dynamoRecord.Dynamodb.NewImage.MessageCount.N)
 
 	if err != nil {
-		log.Printf("Error unmarshalling record: %+v \n. Ignoring record", err)
+		cTrackErr.Printf("Error unmarshalling record: %+v \n. Ignoring record", err)
 		return nil
 	}
 
 	// If no messages are left, migration is complete
 	if messageCount == 0 {
-		log.Printf("EntityID: %s, MessageCount: %d completed !!!", dynamoRecord.Dynamodb.NewImage.EntityID.S, messageCount)
+		cTrack.Printf("EntityID: %s, MessageCount: %d completed !!!  \n", dynamoRecord.Dynamodb.NewImage.EntityID.S, messageCount)
 		entity.RemoveEntity(dynamoRecord.Dynamodb.NewImage.EntityID.S)
 	}
 
 	// Check if Entities are left
 	if entity.GetEntityCount() == 0 {
-		log.Printf("All Entities are migrated !!!")
+		cTrack.Printf("All Entities are migrated !!! \n")
 
 		// Exit the program
 		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	}
 
-	log.Println("---------------------------")
+	cTrack.Println("---------------------------")
 	return nil
 }

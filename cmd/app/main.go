@@ -42,13 +42,7 @@ func main() {
 		log.Fatal("Kinesis Stream Name is required")
 	}
 
-	// _entity_count := 2
-	// _region := "us-west-2"
-	// _ddb_table := "entity_messages"
-	// _entity_queue_url := "https://sqs.us-west-2.amazonaws.com/381491940830/EntityMessagesQueue"
-	// _kinesis_stream_name := "entity-messages-stream"
-
-	c := color.New(color.BgHiYellow)
+	c := color.New(color.FgHiYellow)
 	cErr := color.New(color.FgRed).Add(color.Bold)
 
 	// Start Producer

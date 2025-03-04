@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
+	color "github.com/fatih/color"
 )
 
 type KinesisConsumer struct {
@@ -24,6 +25,9 @@ type KinesisConsumer struct {
 }
 
 type KinesisRecordHandler func(record types.Record) error
+
+var c = color.New(color.FgHiGreen)
+var cErr = color.New(color.FgRed).Add(color.Bold)
 
 func NewKinesisConsumer(streamName string, region string) (*KinesisConsumer, error) {
 	// Load AWS configuration
@@ -77,8 +81,8 @@ func (kc *KinesisConsumer) getShardIds() ([]string, error) {
 
 func (kc *KinesisConsumer) processRecords(records []types.Record, handler KinesisRecordHandler) error {
 	for _, record := range records {
-		log.Printf("Shard ID: %s, Sequence Number: %s", *record.PartitionKey, *record.SequenceNumber)
-		log.Printf("Data: %s", string(record.Data))
+		c.Printf("Shard ID: %s, Sequence Number: %s \n", *record.PartitionKey, *record.SequenceNumber)
+		c.Printf("Data: %s \n", string(record.Data))
 
 		handler(record)
 	}
@@ -89,7 +93,7 @@ func (kc *KinesisConsumer) processRecords(records []types.Record, handler Kinesi
 func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHandler) {
 	defer kc.wg.Done()
 
-	log.Printf("Starting processing for shard: %s", shardId)
+	c.Printf("Starting processing for shard: %s", shardId)
 
 	// Get initial shard iterator
 	iteratorOutput, err := kc.client.GetShardIterator(kc.ctx, &kinesis.GetShardIteratorInput{
@@ -98,7 +102,7 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 		ShardIteratorType: types.ShardIteratorTypeTrimHorizon,
 	})
 	if err != nil {
-		log.Printf("Error getting shard iterator for shard %s: %v", shardId, err)
+		cErr.Printf("Error getting shard iterator for shard %s: %v", shardId, err)
 		return
 	}
 
@@ -108,11 +112,11 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 	for {
 		select {
 		case <-kc.ctx.Done():
-			log.Printf("Stopping processing for shard: %s", shardId)
+			cErr.Printf("Stopping processing for shard: %s", shardId)
 			return
 		default:
 			if shardIterator == nil {
-				log.Printf("Shard iterator is nil for shard %s, stopping", shardId)
+				cErr.Printf("Shard iterator is nil for shard %s, stopping", shardId)
 				return
 			}
 
@@ -123,7 +127,7 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 			})
 
 			if err != nil {
-				log.Printf("Error getting records from shard %s: %v", shardId, err)
+				cErr.Printf("Error getting records from shard %s: %v", shardId, err)
 				time.Sleep(time.Second) // Basic retry mechanism
 				continue
 			}
@@ -131,7 +135,7 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 			// Process the records
 			if len(output.Records) > 0 {
 				if err := kc.processRecords(output.Records, handler); err != nil {
-					log.Printf("Error processing records from shard %s: %v", shardId, err)
+					cErr.Printf("Error processing records from shard %s: %v", shardId, err)
 				}
 			}
 
@@ -140,7 +144,7 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 
 			// Handle closed shard
 			if shardIterator == nil {
-				log.Printf("Shard %s has been closed", shardId)
+				cErr.Printf("Shard %s has been closed", shardId)
 				return
 			}
 
@@ -157,7 +161,7 @@ func (kc *KinesisConsumer) Start(handler KinesisRecordHandler) error {
 		return err
 	}
 
-	log.Printf("Found %d shards", len(shardIds))
+	c.Printf("Found %d shards", len(shardIds))
 
 	// Start a goroutine for each shard
 	for _, shardId := range shardIds {
@@ -183,7 +187,7 @@ func (consumer *KinesisConsumer) StartKinesisStreamProcessor(handler KinesisReco
 
 	// Start consumer in a goroutine
 	go func() {
-		log.Printf("Starting to consume from stream: %s", consumer.streamName)
+		c.Printf("Starting to consume from stream: %s", consumer.streamName)
 		if err := consumer.Start(handler); err != nil {
 			log.Fatalf("Error starting consumer: %v", err)
 		}
@@ -191,6 +195,6 @@ func (consumer *KinesisConsumer) StartKinesisStreamProcessor(handler KinesisReco
 
 	// Wait for shutdown signal
 	<-sigChan
-	log.Println("Shutting down...")
+	c.Println("Shutting down...")
 	consumer.Stop()
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	color "github.com/fatih/color"
 )
 
 type Handler func(ctx context.Context, msg *types.Message, region string, tableName string) error
@@ -31,6 +32,9 @@ type Worker struct {
 	Sqs    *sqs.Client
 	Events map[string]interface{}
 }
+
+var c = color.New(color.FgHiGreen)
+var cErr = color.New(color.FgRed).Add(color.Bold)
 
 func NewWorker(cfg *Config) (*Worker, error) {
 	// Load AWS configuration
@@ -68,25 +72,25 @@ func (w *Worker) start(ctx context.Context, handler Handler, wg *sync.WaitGroup)
 
 func (w *Worker) consume(ctx context.Context, workerID int, handler Handler, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Printf("Starting worker %d", workerID)
+	c.Printf("Starting worker %d \n", workerID)
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("Worker %d shutting down", workerID)
+			c.Printf("Worker %d shutting down \n", workerID)
 			return
 		default:
 			// Receive messages
 			output, err := w.Sqs.ReceiveMessage(ctx, w.Input)
 			if err != nil {
-				log.Printf("Error receiving message: %v", err)
+				cErr.Printf("Error receiving message: %v \n", err)
 				continue
 			}
 
 			// Process messages
 			for _, message := range output.Messages {
 				if err := handler(ctx, &message, w.Config.Region, w.Config.TableName); err != nil {
-					log.Printf("Error processing message: %v", err)
+					cErr.Printf("Error processing message: %v \n", err)
 					continue
 				}
 
@@ -96,7 +100,7 @@ func (w *Worker) consume(ctx context.Context, workerID int, handler Handler, wg 
 					ReceiptHandle: message.ReceiptHandle,
 				})
 				if err != nil {
-					log.Printf("Error deleting message: %v", err)
+					cErr.Printf("Error deleting message: %v \n", err)
 				}
 			}
 		}
@@ -106,7 +110,7 @@ func (w *Worker) consume(ctx context.Context, workerID int, handler Handler, wg 
 func StartSqsConsumer(messageHandler Handler, cfg *Config) {
 	worker, err := NewWorker(cfg)
 	if err != nil {
-		log.Fatalf("Error creating worker: %v", err)
+		log.Fatalf("Error creating worker: %v \n", err)
 	}
 
 	// Create context that can be canceled
@@ -125,12 +129,12 @@ func StartSqsConsumer(messageHandler Handler, cfg *Config) {
 
 	// Wait for interrupt signal
 	<-sigChan
-	log.Println("Shutting down gracefully...")
+	c.Println("Shutting down gracefully...")
 
 	// Cancel context to stop workers
 	cancel()
 
 	// Wait for all workers to finish
 	wg.Wait()
-	log.Println("Shutdown complete")
+	c.Println("Shutdown complete")
 }

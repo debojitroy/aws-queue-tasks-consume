@@ -11,12 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	entity "github.com/debojitroy/aws-queue-tasks-consume/internal/services/entity"
+	color "github.com/fatih/color"
 )
 
 type SqsClient struct {
 	client   *sqs.Client
 	queueUrl string
 }
+
+var cConsoleErr = color.New(color.FgRed).Add(color.Bold)
 
 // NewSQSClient creates a new SQS client
 func NewSQSClient(region string, queueUrl string) (*SqsClient, error) {
@@ -81,7 +84,7 @@ func (sqsClient *SqsClient) SendEntityMessages(entity *entity.Entity) error {
 		// Handle any failed messages
 		if len(result.Failed) > 0 {
 			for _, failure := range result.Failed {
-				log.Printf("Failed to send message ID: %s, Code: %s, Message: %s\n",
+				cConsoleErr.Printf("Failed to send message ID: %s, Code: %s, Message: %s\n",
 					*failure.Id, *failure.Code, *failure.Message)
 			}
 		}

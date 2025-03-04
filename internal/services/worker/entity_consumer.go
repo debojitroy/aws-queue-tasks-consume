@@ -6,33 +6,36 @@ import (
 
 	dynamodb "github.com/debojitroy/aws-queue-tasks-consume/internal/services/aws/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	color "github.com/fatih/color"
 )
 
+var cConsumer = color.New(color.FgHiGreen)
+
 func EntityMessageConsumer(ctx context.Context, msg *types.Message, region string, tableName string) error {
-	log.Println("-----------------------------------------------------------")
-	log.Printf("Message: %s", *msg.Body)
+	cConsumer.Println("##########################################################")
+	cConsumer.Printf("Message: %s \n", *msg.Body)
 	entity_id, ok := msg.MessageAttributes["entity_id"]
 
 	if !ok {
-		log.Println("Entity ID is nil")
+		cConsumer.Println("Entity ID is nil")
 		return nil
 	} else {
-		log.Printf("Entity ID: %s", *entity_id.StringValue)
+		cConsumer.Printf("Entity ID: %s \n", *entity_id.StringValue)
 	}
 
 	message_id, ok := msg.MessageAttributes["message_id"]
 
 	if !ok {
-		log.Println("Message ID is nil")
+		cConsumer.Println("Message ID is nil")
 		return nil
 	} else {
-		log.Printf("Message ID: %s", *message_id.StringValue)
+		cConsumer.Printf("Message ID: %s \n", *message_id.StringValue)
 	}
-	log.Println("###########################################################")
+	cConsumer.Println("###########################################################")
 
 	ddb, err := dynamodb.NewDynamoDBClient(region, tableName)
 	if err != nil {
-		log.Fatalf("Failed to create DynamoDB client: %v", err)
+		log.Fatalf("Failed to create DynamoDB client: %v \n", err)
 		return err
 	}
 
