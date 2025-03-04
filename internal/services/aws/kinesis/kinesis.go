@@ -3,11 +3,11 @@ package kinesis
 import (
 	"context"
 	"log"
-	"sync"
-	"time"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -93,7 +93,7 @@ func (kc *KinesisConsumer) processRecords(records []types.Record, handler Kinesi
 func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHandler) {
 	defer kc.wg.Done()
 
-	c.Printf("Starting processing for shard: %s", shardId)
+	c.Printf("Starting processing for shard: %s \n", shardId)
 
 	// Get initial shard iterator
 	iteratorOutput, err := kc.client.GetShardIterator(kc.ctx, &kinesis.GetShardIteratorInput{
@@ -102,7 +102,7 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 		ShardIteratorType: types.ShardIteratorTypeTrimHorizon,
 	})
 	if err != nil {
-		cErr.Printf("Error getting shard iterator for shard %s: %v", shardId, err)
+		cErr.Printf("Error getting shard iterator for shard %s: %+v  \n", shardId, err)
 		return
 	}
 
@@ -112,11 +112,11 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 	for {
 		select {
 		case <-kc.ctx.Done():
-			cErr.Printf("Stopping processing for shard: %s", shardId)
+			cErr.Printf("Stopping processing for shard: %s \n", shardId)
 			return
 		default:
 			if shardIterator == nil {
-				cErr.Printf("Shard iterator is nil for shard %s, stopping", shardId)
+				cErr.Printf("Shard iterator is nil for shard %s, stopping \n", shardId)
 				return
 			}
 
@@ -127,7 +127,7 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 			})
 
 			if err != nil {
-				cErr.Printf("Error getting records from shard %s: %v", shardId, err)
+				cErr.Printf("Error getting records from shard %s: %+v \n", shardId, err)
 				time.Sleep(time.Second) // Basic retry mechanism
 				continue
 			}
@@ -135,7 +135,7 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 			// Process the records
 			if len(output.Records) > 0 {
 				if err := kc.processRecords(output.Records, handler); err != nil {
-					cErr.Printf("Error processing records from shard %s: %v", shardId, err)
+					cErr.Printf("Error processing records from shard %s: %+v \n", shardId, err)
 				}
 			}
 
@@ -144,7 +144,7 @@ func (kc *KinesisConsumer) processShard(shardId string, handler KinesisRecordHan
 
 			// Handle closed shard
 			if shardIterator == nil {
-				cErr.Printf("Shard %s has been closed", shardId)
+				cErr.Printf("Shard %s has been closed \n", shardId)
 				return
 			}
 
@@ -161,7 +161,7 @@ func (kc *KinesisConsumer) Start(handler KinesisRecordHandler) error {
 		return err
 	}
 
-	c.Printf("Found %d shards", len(shardIds))
+	c.Printf("Found %d shards \n", len(shardIds))
 
 	// Start a goroutine for each shard
 	for _, shardId := range shardIds {
@@ -187,7 +187,7 @@ func (consumer *KinesisConsumer) StartKinesisStreamProcessor(handler KinesisReco
 
 	// Start consumer in a goroutine
 	go func() {
-		c.Printf("Starting to consume from stream: %s", consumer.streamName)
+		c.Printf("Starting to consume from stream: %s \n", consumer.streamName)
 		if err := consumer.Start(handler); err != nil {
 			log.Fatalf("Error starting consumer: %v", err)
 		}

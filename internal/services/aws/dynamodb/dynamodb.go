@@ -2,7 +2,6 @@ package dynamodb
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -10,7 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	color "github.com/fatih/color"
 )
+
+var cErr = color.New(color.FgRed).Add(color.Bold)
 
 type EntityMessages struct {
 	EntityId     string `dynamodbav:"entity_id"`
@@ -85,8 +87,8 @@ func (d *DynamoDBClient) DecrementMessageCount(ctx context.Context, entityId str
 	// Execute the UpdateItem operation
 	_, err := d.client.UpdateItem(ctx, input)
 	if err != nil {
-		fmt.Printf("Update Error Reason: %s", err.Error())
-		fmt.Printf("Update Error: %v", err)
+		cErr.Printf("Update Error Reason: %s \n", err.Error())
+		cErr.Printf("Update Error: %+v \n", err)
 		return err
 	}
 

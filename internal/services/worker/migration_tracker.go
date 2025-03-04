@@ -60,13 +60,13 @@ func MigrationTrackerHandler(record types.Record) error {
 		log.Fatalf("Error unmarshalling record: %v", err)
 		return err
 	} else {
-		cTrack.Printf("New Record: %+v", dynamoRecord.Dynamodb.NewImage)
+		cTrack.Printf("New Record: %+v \n", dynamoRecord.Dynamodb.NewImage)
 	}
 
 	messageCount, err := strconv.Atoi(dynamoRecord.Dynamodb.NewImage.MessageCount.N)
 
 	if err != nil {
-		cTrackErr.Printf("Error unmarshalling record: %+v \n. Ignoring record", err)
+		cTrackErr.Printf("Error unmarshalling record: %+v. Ignoring record \n", err)
 		return nil
 	}
 

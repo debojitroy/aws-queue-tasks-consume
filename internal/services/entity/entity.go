@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+//Note: This can be replaced by Redis SET as well to make it stateless
 var _entityTracker = make(map[string]struct{}, 0)
 
 var source = rand.NewSource(time.Now().UnixNano())
